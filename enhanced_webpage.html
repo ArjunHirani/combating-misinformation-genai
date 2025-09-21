@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 News Verification AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .main-content {
+            padding: 40px;
+        }
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+            background: #f8f9fa;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 18px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .input-field {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+        textarea.input-field {
+            min-height: 140px;
+            resize: vertical;
+        }
+        .analyze-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+         .analyze-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 20px;
+        }
+        .score-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            background: conic-gradient(var(--score-color) var(--score-percent), #e9ecef 0);
+        }
+        .score-circle .score-text {
+            background: white;
+            border-radius: 50%;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--score-color);
+        }
+        .score-high { --score-color: #28a745; }
+        .score-medium { --score-color: #fd7e14; }
+        .score-low { --score-color: #dc3545; }
+        .recommendation-box {
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--rec-color);
+            background: white;
+        }
+        .rec-high { --rec-color: #28a745; }
+        .rec-medium { --rec-color: #fd7e14; }
+        .rec-low { --rec-color: #dc3545; }
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .detail-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        .article-preview {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .file-input-wrapper {
+            position: relative;
+            background: #f8f9fa;
+            border: 2px dashed #e0e0e0;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .file-input-wrapper:hover {
+            border-color: #667eea;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-input-wrapper span {
+            font-weight: 600;
+            color: #667eea;
+        }
+        #file-name {
+            margin-top: 15px;
+            font-style: italic;
+            color: #6c757d;
+        }
+        @media (max-width: 768px) {
+            .tab-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 News Verification AI</h1>
+            <p>Advanced Misinformation Detection System</p>
+        </div>
+
+        <div class="main-content">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('url', this)">🌐 Analyze URL</button>
+                <button class="tab-btn" onclick="switchTab('text', this)">📝 Analyze Text</button>
+                <button class="tab-btn" onclick="switchTab('image', this)">🖼️ Analyze Image</button>
+            </div>
+
+            <div id="url-tab" class="tab-content active">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="url-input">🔗 Enter News Article URL:</label>
+                        <input type="url" id="url-input" class="input-field" placeholder="https://example.com/news-article">
+                    </div>
+                    <button class="analyze-btn" onclick="analyzeURL()">🔍 Analyze Complete Article</button>
+                </div>
+            </div>
+
+            <div id="text-tab" class="tab-content">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="text-input">📝 Enter Text to Analyze:</label>
+                        <textarea id="text-input" class="input-field" placeholder="Paste the news text, article, or claims you want to verify..."></textarea>
+                    </div>
+                    <button class="analyze-btn" onclick="analyzeText()">🔍 Analyze Text Content</button>
+                </div>
+            </div>
+            
+            <div id="image-tab" class="tab-content">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label>🖼️ Upload Image for OCR Analysis:</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="image-input" accept="image/png, image/jpeg, image/webp" onchange="updateFileName()">
+                            <p>Drag & Drop your image here, or <span>click to browse</span>.</p>
+                            <p id="file-name">No file selected.</p>
+                        </div>
+                    </div>
+                    <button class="analyze-btn" onclick="analyzeImage()">🔍 Analyze Image Content</button>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <h3>🤖 AI Analysis in Progress...</h3>
+            </div>
+
+            <div class="error-message" id="error">
+                <strong>Error:</strong> <span id="errorMessage"></span>
+            </div>
+
+            <div class="results" id="results">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab, element) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+
+            hideResults();
+            hideError();
+        }
+
+        function updateFileName() {
+            const input = document.getElementById('image-input');
+            const fileNameDisplay = document.getElementById('file-name');
+            if (input.files.length > 0) {
+                fileNameDisplay.textContent = input.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'No file selected.';
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.querySelectorAll('.analyze-btn').forEach(btn => btn.disabled = true);
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.querySelectorAll('.analyze-btn').forEach(btn => btn.disabled = false);
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function hideResults() {
+            document.getElementById('results').style.display = 'none';
+        }
+
+        async function analyzeURL() {
+            const urlInput = document.getElementById('url-input');
+            const url = urlInput.value.trim();
+            if (!url) { showError('Please enter a URL'); return; }
+
+            showLoading();
+            try {
+                const response = await fetch('http://localhost:8000/analyze-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+                displayURLResults(data.result);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function analyzeText() {
+            const textInput = document.getElementById('text-input');
+            const text = textInput.value.trim();
+            if (!text) { showError('Please enter text to analyze'); return; }
+
+            showLoading();
+            try {
+                const response = await fetch('http://localhost:8000/analyze-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+                displayTextResults(data.result);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function analyzeImage() {
+            const imageInput = document.getElementById('image-input');
+            const file = imageInput.files[0];
+            if (!file) { showError('Please select an image file'); return; }
+
+            showLoading();
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://localhost:8000/analyze-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+                displayTextResults(data.result, true);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // FIX #2: Re-added the missing displayURLResults function
+        function displayURLResults(result) {
+            const resultsDiv = document.getElementById('results');
+            const score = result.credibility_score;
+            let scoreClass = 'score-low';
+            if (score >= 70) scoreClass = 'score-high';
+            else if (score >= 40) scoreClass = 'score-medium';
+            
+            const scorePercent = `${score * 3.6}deg`;
+
+            resultsDiv.innerHTML = `
+                <div class="score-section">
+                    <div class="score-circle ${scoreClass}" style="--score-percent: ${scorePercent};">
+                        <div class="score-text">${score}/100</div>
+                    </div>
+                    <h2>Credibility Analysis Complete</h2>
+                </div>
+                <div class="recommendation-box ${scoreClass.replace('score', 'rec')}">
+                    <h3>Primary Recommendation</h3>
+                    <p>${result.recommendation.primary_recommendation}</p>
+                </div>
+                <div class="details-grid">
+                     <div class="detail-card">
+                        <h4>AI Analysis</h4>
+                        <div class="detail-item"><span>AI Credibility:</span> <span>${result.detailed_analysis.score_breakdown.ai_analysis}/100</span></div>
+                        <div class="detail-item"><span>Fake Probability:</span> <span>${(result.detailed_analysis.content_analysis.fake_probability * 100).toFixed(1)}%</span></div>
+                     </div>
+                     <div class="detail-card">
+                        <h4>Source Analysis</h4>
+                        <div class="detail-item"><span>Source Credibility:</span> <span>${result.detailed_analysis.source_analysis.credibility_score}/100</span></div>
+                        <div class="detail-item"><span>Source Category:</span> <span>${result.detailed_analysis.source_analysis.category}</span></div>
+                     </div>
+                </div>
+                <div class="article-preview">
+                    <h4>Article Preview</h4>
+                    <p><strong>${result.article_title}</strong></p>
+                    <p>${result.article_preview}</p>
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+
+        function displayTextResults(result, isFromImage = false) {
+            const resultsDiv = document.getElementById('results');
+            const score = result.credibility_score;
+            let scoreClass = 'score-low';
+            if (score >= 70) scoreClass = 'score-high';
+            else if (score >= 40) scoreClass = 'score-medium';
+
+            const scorePercent = `${score * 3.6}deg`;
+            
+            // FIX #3: Corrected logic to build the full HTML string first
+            let finalHTML = '';
+
+            if (isFromImage && result.extracted_text) {
+                finalHTML += `
+                <div class="article-preview" style="margin-bottom: 20px;">
+                    <h4>🖼️ Extracted Text from Image</h4>
+                    <div class="article-text" style="white-space: pre-wrap;">${result.extracted_text}</div>
+                </div>`;
+            }
+
+            finalHTML += `
+                <div class="score-section">
+                     <div class="score-circle ${scoreClass}" style="--score-percent: ${scorePercent};">
+                        <div class="score-text">${score}/100</div>
+                    </div>
+                    <h2>Text Analysis Complete</h2>
+                </div>
+                <div class="recommendation-box ${scoreClass.replace('score', 'rec')}">
+                    <h3>Analysis Result</h3>
+                    <p>${result.recommendation.primary_recommendation}</p>
+                </div>
+                <div class="details-grid">
+                     <div class="detail-card">
+                        <h4>AI Analysis</h4>
+                        <div class="detail-item"><span>AI Credibility:</span> <span>${result.analysis_details.ai_credibility_score}/100</span></div>
+                        <div class="detail-item"><span>Fake Probability:</span> <span>${(result.analysis_details.ai_fake_probability * 100).toFixed(1)}%</span></div>
+                     </div>
+                     <div class="detail-card">
+                        <h4>Content Quality</h4>
+                        <div class="detail-item"><span>Quality Score:</span> <span>${result.analysis_details.content_quality_score}/100</span></div>
+                     </div>
+                </div>
+                <div class="article-preview">
+                    <h4>Analyzed Text</h4>
+                    <p>${result.text_analyzed}</p>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = finalHTML;
+            resultsDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

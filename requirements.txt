@@ -1,0 +1,18 @@
+# ASGI Server
+fastapi==0.111.0
+uvicorn==0.29.0
+gunicorn==22.0.0
+python-multipart==0.0.9
+
+# AI & Machine Learning
+transformers==4.41.2
+torch==2.3.1
+
+# Web Scraping & APIs
+requests==2.31.0
+beautifulsoup4==4.12.3
+feedparser==6.0.11
+
+# Image Processing (OCR)
+Pillow==10.3.0
+pytesseract==0.3.10
