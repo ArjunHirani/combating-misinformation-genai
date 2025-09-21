@@ -601,10 +601,7 @@ class SuperPoweredNewsVerificationAI:
             'detailed_recommendations': recommendations
         }
 
-# Test the super-powered system
-if __name__ == "__main__":
-    print("🚀 Testing SUPER POWERED News Verification AI")
-    print("="*70)
+# Test the super-powered syst
     
     ai = SuperPoweredNewsVerificationAI()
     
