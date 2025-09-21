@@ -291,7 +291,7 @@
             
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <h3>🤖 AI Analysis in Progress...</h3>
+                <h3 id="loading-text">🤖 AI Analysis in Progress...</h3>
             </div>
 
             <div class="error-message" id="error">
@@ -302,6 +302,9 @@
                 </div>
         </div>
     </div>
+
+    <!-- CHANGE #1: Added the image compression library script -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
     <script>
         function switchTab(tab, element) {
@@ -325,7 +328,8 @@
             }
         }
 
-        function showLoading() {
+        function showLoading(message = '🤖 AI Analysis in Progress...') {
+            document.getElementById('loading-text').textContent = message;
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results').style.display = 'none';
             document.getElementById('error').style.display = 'none';
@@ -357,7 +361,8 @@
 
             showLoading();
             try {
-                const response = await fetch('http://localhost:8000/analyze-url', {
+                // CHANGE #2: Fixed the API URL to be relative for Vercel deployment
+                const response = await fetch('/api/analyze-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url })
@@ -379,7 +384,8 @@
 
             showLoading();
             try {
-                const response = await fetch('http://localhost:8000/analyze-text', {
+                // CHANGE #2: Fixed the API URL to be relative for Vercel deployment
+                const response = await fetch('/api/analyze-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text })
@@ -393,24 +399,45 @@
                 hideLoading();
             }
         }
-
+        
+        // CHANGE #3: This entire function is updated to include compression
         async function analyzeImage() {
             const imageInput = document.getElementById('image-input');
             const file = imageInput.files[0];
             if (!file) { showError('Please select an image file'); return; }
 
-            showLoading();
-            const formData = new FormData();
-            formData.append('file', file);
+            showLoading('Compressing image...'); // New loading message
 
             try {
-                const response = await fetch('http://localhost:8000/analyze-image', {
+                // Step 1: Define compression options
+                const options = {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true
+                };
+
+                // Step 2: Compress the file
+                const compressedFile = await imageCompression(file, options);
+                console.log(`Original Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+                console.log(`Compressed Size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+
+                showLoading('Uploading and analyzing image...'); // Update message
+
+                // Step 3: Create FormData with the compressed file
+                const formData = new FormData();
+                formData.append('file', compressedFile, compressedFile.name);
+
+                // Step 4: Send the fetch request with the compressed file
+                // CHANGE #2: Fixed the API URL to be relative for Vercel deployment
+                const response = await fetch('/api/analyze-image', {
                     method: 'POST',
                     body: formData
                 });
+
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail);
                 displayTextResults(data.result, true);
+
             } catch (error) {
                 showError(error.message);
             } finally {
@@ -418,7 +445,6 @@
             }
         }
         
-        // FIX #2: Re-added the missing displayURLResults function
         function displayURLResults(result) {
             const resultsDiv = document.getElementById('results');
             const score = result.credibility_score;
@@ -469,7 +495,6 @@
 
             const scorePercent = `${score * 3.6}deg`;
             
-            // FIX #3: Corrected logic to build the full HTML string first
             let finalHTML = '';
 
             if (isFromImage && result.extracted_text) {
@@ -514,3 +539,4 @@
     </script>
 </body>
 </html>
+
